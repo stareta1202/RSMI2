@@ -1,0 +1,10 @@
+.vscode/*
+*.o
+torch_models/*
+Exp
+*.sh
+files/*
+indices/ZM.h
+datasets/*
+*.txt
+*.csv
