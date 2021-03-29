@@ -923,11 +923,11 @@ vector<Point> RSMI::acc_kNN_query(ExpRecorder &exp_recorder, Point query_point, 
 // TODO when rebuild!!!
 void RSMI::insert(ExpRecorder &exp_recorder, Point point)
 {
-    cout << point.x << "," << point.y << endl;
+    // cout << point.x << "," << point.y << endl;
     int predicted_index = net->predict(point) * width;
     predicted_index = predicted_index < 0 ? 0 : predicted_index;
     predicted_index = predicted_index >= width ? width - 1 : predicted_index;
-    cout << "prediction done:" << predicted_index << endl;
+    // cout << "prediction done:" << predicted_index << endl;
     if (is_last)
     {
         // cout << is_last << endl;
@@ -980,9 +980,9 @@ void RSMI::insert(ExpRecorder &exp_recorder, vector<Point> points)
     auto start = chrono::high_resolution_clock::now();
     for (Point point : points)
     {
-        cout << "size of point: " << points.size() << endl;
+        // cout << "size of point: " << points.size() << endl;
         insert(exp_recorder, point);
-        cout << "after insert" << endl;
+        // cout << "after insert" << endl;
     }
     auto finish = chrono::high_resolution_clock::now();
     exp_recorder.insert_time = (chrono::duration_cast<chrono::nanoseconds>(finish - start).count()) / exp_recorder.insert_num;

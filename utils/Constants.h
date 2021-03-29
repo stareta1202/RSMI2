@@ -16,7 +16,7 @@ public:
     static const int HIDDEN_LAYER_WIDTH = 50;
     static const int THRESHOLD = 10000;
 
-    static const int DEFAULT_SIZE  = 20000000;
+    static const int DEFAULT_SIZE  = 16000000;
     static const int DEFAULT_SKEWNESS  = 4;
 
     static const double LEARNING_RATE;

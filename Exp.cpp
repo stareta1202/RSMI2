@@ -21,6 +21,7 @@
 
 // EDIT: Include cstdlib for hashing string
 #include <cstdlib>
+#include <unordered_map>
 // END EDIT
 
 using namespace std;
@@ -236,33 +237,60 @@ int main(int argc, char **argv)
     long long elapsed = 0;
     long long range_elapsed = 0;
     long long count = 0;
+    long long range_count = 0;
+
+    auto start = chrono::high_resolution_clock::now();
+    auto finish = chrono::high_resolution_clock::now();
+
+    unordered_map<int, Point> hash_map;
 
     while (getline(f, l)) {
         vector<string> vec;
         cout << count++ << endl;
-        
+        long long insert_time = 0;
         boost::algorithm::split(vec, l, boost::is_any_of(", "));
+        // cout << "split! " << vec[0] << endl;
         if (vec[0].compare("INSERT") == 0) {
             Point p((stod(vec[2]) - minx) / rangex, (stod(vec[3]) - miny) / rangey);
-            vector<Point> pts;
-            pts.push_back(p);
-            cout << vec[1] << ")" << vec[2] << "," << vec[3] << endl;
+            // vector<Point> pts;
+            // pts.push_back(p);
+            int index = stoi(vec[1]);
+            // cout << vec[1] << ")" << vec[2] << "," << vec[3] << endl;
             // if (partition->point_query(exp_recorder, pts)) {
             //     partition->remove(exp_recorder, pts);
             //     exp_recorder.clean();
             // }
             // partition->remove(exp_recorder, pts);
             // exp_recorder.clean();
-            partition->insert(exp_recorder, pts);
-            // if (count == 1962033) cout << "checkpoint 1" << endl;
-            cout << "Insert Time: " << exp_recorder.insert_time << endl;
-            elapsed += exp_recorder.insert_time;
+            auto item = hash_map.find(index);
+            if (item != hash_map.end()) {
+                // cout << "index is: " << index << endl;
+                hash_map.erase(index);
+                start = chrono::high_resolution_clock::now();
+                partition->remove(exp_recorder, p);
+                finish = chrono::high_resolution_clock::now();
+                insert_time += chrono::duration_cast<chrono::nanoseconds>(finish - start).count();
+            }
+            hash_map.insert(make_pair(index, p));
+
+            start = chrono::high_resolution_clock::now();
+            partition->insert(exp_recorder, p);
+            finish = chrono::high_resolution_clock::now();
+            insert_time += chrono::duration_cast<chrono::nanoseconds>(finish - start).count();
+
+            // cout << "Insert Time: " << insert_time << endl;
+            elapsed += insert_time;
             exp_recorder.clean();
         } else if (vec[0].compare("POINT") == 0) {
             Point p((stod(vec[1]) - minx) / rangex, (stod(vec[2]) - miny) / rangey);
-            vector<Point> pts;
-            pts.push_back(p);
-            partition->point_query(exp_recorder, pts);
+            // vector<Point> pts;
+            // pts.push_back(p);
+
+            start = chrono::high_resolution_clock::now();
+            partition->point_query(exp_recorder, p);
+            finish = chrono::high_resolution_clock::now();
+            insert_time += chrono::duration_cast<chrono::nanoseconds>(finish - start).count();
+
             cout << "Point Query Time: " << exp_recorder.time << endl;
             elapsed += exp_recorder.time;
             exp_recorder.clean();
@@ -271,7 +299,7 @@ int main(int argc, char **argv)
             vector<Mbr> tmbrs;
             tmbrs.push_back(tmbr);
             partition->window_query(exp_recorder, tmbrs);
-            cout << "Range Query Time: " << exp_recorder.time << "//" << vec[1] << "," << vec[2] << "," << vec[3] << "," << vec[4] << endl;
+            cout << range_count++ << ") Range Query Time: " << exp_recorder.time << " // " << vec[1] << "," << vec[2] << "," << vec[3] << "," << vec[4] << endl;
             elapsed += exp_recorder.time;
             range_elapsed += exp_recorder.time;
             exp_recorder.clean();
@@ -291,20 +319,30 @@ int main(int argc, char **argv)
             maxy = stod(vec[4]);
             rangex = maxx - minx;
             rangey = maxy - miny;
-            exp_recorder.clean();
+            // exp_recorder.clean();
         } else if (vec[0].compare("DELETE") == 0) {
-            Point p((stod(vec[1]) - minx) / rangex, (stod(vec[2]) - miny) / rangey);
-            vector<Point> pts;
-            pts.push_back(p);
-            partition->remove(exp_recorder, pts);
-            cout << "DELETE Query Time: " << exp_recorder.delete_time << endl;
-            elapsed += exp_recorder.delete_time;
+            Point p((stod(vec[2]) - minx) / rangex, (stod(vec[3]) - miny) / rangey);
+            int index = stoi(vec[1]);
+            // vector<Point> pts;
+            // pts.push_back(p);
+            auto item = hash_map.find(index);
+            if (item != hash_map.end()) {  
+                hash_map.erase(index);
+            }
+
+            start = chrono::high_resolution_clock::now();
+            partition->remove(exp_recorder, p);
+            finish = chrono::high_resolution_clock::now();
+            insert_time += chrono::duration_cast<chrono::nanoseconds>(finish - start).count();
+
+            cout << "DELETE Query Time: " << insert_time << endl;
+            elapsed += insert_time;
             exp_recorder.clean();
         }
     }
 
     f.close();
-
+    cout << "Total Number of Elements : " << hash_map.size() << endl;
     cout << "Total Elapsed Time : " << elapsed << " nanoseconds" << endl;
     cout << "Total Range Query Time : " << range_elapsed << " nanoseconds" << endl;
 
